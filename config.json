@@ -1,0 +1,9 @@
+{
+	"database": {
+		"hostname": "database.svnserver.local",
+		"username": "svnserver",
+		"password": "password123",
+		"database": "svnserver"
+	},
+	"port": 4000
+}
