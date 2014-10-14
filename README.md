@@ -96,7 +96,7 @@ Content-Type: application/json
 			"message": "Updates!"
 		},
 		{
-			"author": "James D <james@jdrydn.com>"
+			"author": "James D <james@jdrydn.com>",
 			"message": "Initial commit"
 		}
 	]
