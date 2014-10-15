@@ -1,13 +1,37 @@
 # KentProjects SVN Server
 
 The KentProjects SVN Server is a simple NodeJS application that allows direct manipulation of SVN repositories via a simple HTTP API.
+Written in NodeJS so that the server this runs on will only be running:
+
+- [NodeJS](http://nodejs.org) (& [NPM](https://www.npmjs.org))
+- [SVN](https://subversion.apache.org)
+- [Trac](http://trac.edgewall.org) (& [Apache](http://httpd.apache.org))
+
+**No [PHP](http://php.net)!**
 
 ## Introduction
 
 The purpose of this SVN server is to simulate a service where an institute running an SVN server
 and requires repositories to be created and destroyed on demand.
 
+## Installation
+
+Ensure you have all the relevant packages installed:
+
+```bash
+$ sudo apt-get install apache2 subversion nodejs mysql-server python-mysqldb python-subversion
+$ sudo apt-get install trac trac-accountmanager ?trac-graphviz trac-icalviewplugin trac-mastertickets trac-wysiwyg trac-wikitablemacro trac-tags trac-customfieldadmin trac-datefieldplugin
+```
+
+```bash
+$ sudo mkdir /home/node /home/svn /home/trac
+$ sudo chown www-data:www-data /home/node /home/svn /home/trac
+$ sudo -u www-data git clone https://github.com/kentprojects/svn-server /home/node
+```
+
 ## Documentation
+
+Here is a list of endpoints & methods that this API supports.
 
 ### Get a list of all repositories
 

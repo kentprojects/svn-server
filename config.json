@@ -1,10 +1,11 @@
 {
 	"database": {
-		"hostname": "database.svnserver.local",
-		"username": "svnserver",
-		"password": "password123",
-		"database": "svnserver"
+		host: "database.svnserver.local",
+		user: "svnserver",
+		password: "svnpassword",
+		database: "svn-server",
+		multipleStatements: true
 	},
 	"port": 4000,
-	"svn": "/var/svn"
+	"svn": "/home/svn"
 }
