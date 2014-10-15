@@ -17,7 +17,7 @@ apt-get autoremove -y
 # Directories required for the SVN server.
 mkdir /home/svn /home/trac
 # Set /home/node to be our project root.
-ln -s /vagrant /home/node
+ln -s /vagrant /home/server
 
 exit 0
 
