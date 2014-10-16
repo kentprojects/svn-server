@@ -4,6 +4,8 @@
 # @license: Copyright KentProjects
 # @link: http://kentprojects.com
 
+sudo true
+
 #
 # Add a new user to a repository.
 #
@@ -21,15 +23,20 @@ function AddUserToRepository
 		echo "Please supply a user name to AddUserToRepository"
 		return 1;
 	fi
-	if [ ! -d "/home/svn/$1" ]; then
-		echo "Repository does not exist at /home/svn/$1"
+
+	SVNBASE="/home/svn/$1"
+	TRACBASE="/home/trac/$1"
+
+	if [ ! -d "$SVNBASE" ]; then
+		echo "Repository does not exist at $SVNBASE"
 		return 2;
 	fi
 
-	echo "$2 = h3r0" >> "/home/svn/$URL/conf/passwd.ini"
-	sudo -u trac trac-admin "/home/trac/$URL" permission add "$2" developer
-	sudo -u trac trac-admin "/home/trac/$URL" deploy /home/trac/$URL/deploy
-	chmod 0775 -R "/home/trac/$URL"
+	echo "$2 = h3r0" >> "$SVNBASE/conf/passwd"
+	sudo -u trac trac-admin "$TRACBASE" permission add "$2" developer
+	sudo -u trac trac-admin "$TRACBASE" deploy "$TRACBASE/deploy"
+	chmod 0775 -R "$SVNBASE"
+	chmod 0775 -R "$TRACBASE"
 }
 
 #
@@ -48,20 +55,26 @@ function CreateRepository
 	NAME="$1"
 	URL=$(date +"%Y")"/$NAME"
 
+	SVNBASE="/home/svn/$URL"
+	TRACBASE="/home/trac/$URL"
+
 	# Create the Subversion Repository
-	sudo -u www-data mkdir "/home/svn/$URL" -p
-	sudo -u www-data svnadmin create "/home/svn/$URL"
-	sudo -u www-data cp /home/server/svn/svnserve.conf "/home/svn/$URL/conf/svnserve.conf"
-	sudo -u www-data cp /home/server/svn/passwd.ini "/home/svn/$URL/conf/passwd.ini"
+	sudo -u subversion mkdir "$SVNBASE" -p
+	sudo -u subversion svnadmin create "$SVNBASE"
+	sudo -u subversion cp /home/server/svn/svnserve.conf "$SVNBASE/conf/svnserve.conf"
+	sudo -u subversion cp /home/server/svn/passwd.ini "$SVNBASE/conf/passwd"
+	chmod 0775 -R "$SVNBASE"
 
 	# Create the Trac instance
-	sudo -u trac mkdir "/home/trac/$URL" -p
-	sudo -u trac trac-admin "/home/trac/$URL" initenv "$NAME" "sqlite:db/trac.db"
-	sudo -u trac trac-admin "/home/trac/$URL" repository add "$NAME" "/home/svn/$URL"
+	sudo -u trac mkdir "$TRACBASE" -p
+	sudo -u trac trac-admin "$TRACBASE" initenv "$NAME" "sqlite:db/trac.db"
+	sudo -u trac trac-admin "$TRACBASE" repository add "$NAME" "$SVNBASE"
 
-	sudo -u trac trac-admin "/home/trac/$URL" permission add admin TRAC_ADMIN
-	sudo -u trac trac-admin "/home/trac/$URL" permission add developer BROWSER_VIEW CHANGESET_VIEW FILE_VIEW LOG_VIEW MILESTONE_ADMIN REPORT_ADMIN SEARCH_VIEW TICKET_ADMIN TIMELINE_VIEW WIKI_ADMIN
+	sudo -u trac trac-admin "$TRACBASE" permission add admin TRAC_ADMIN
+	sudo -u trac trac-admin "$TRACBASE" permission add developer BROWSER_VIEW CHANGESET_VIEW FILE_VIEW LOG_VIEW MILESTONE_ADMIN REPORT_ADMIN SEARCH_VIEW TICKET_ADMIN TIMELINE_VIEW WIKI_ADMIN
 
-	sudo -u trac trac-admin "/home/trac/$URL" deploy "/home/trac/$URL/deploy"
-	chmod 0775 -R "/home/trac/$URL"
+	sudo -u trac trac-admin "$TRACBASE" deploy "$TRACBASE/deploy"
+	chmod 0775 -R "$TRACBASE"
+
+	sudo service apache2 restart
 }
