@@ -3,7 +3,7 @@
 # svnserve - Subversion server
 #
 
-description "Subversion server"
+description "Subversion server"s
 
 start on (local-filesystems and net-device-up IFACE=lo and started udev-finish)
 stop on runlevel [06]

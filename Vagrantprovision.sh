@@ -8,7 +8,7 @@ locale-gen en_GB.UTF-8
 apt-get update
 # Install the first wave of packages (Apache with WSGI & Perl mods).
 aptitude install -y apache2 apache2.2-common apache2-mpm-prefork apache2-utils libexpat1 ssl-cert
-aptitude install -y libapache2-mod-wsgi libapache2-mod-perl2 libapache2-mod-svn
+aptitude install -y libapache2-mod-wsgi libapache2-mod-perl2
 service apache2 restart
 # Install the second wave of packages (SVN, NodeJS, SQLite & various Python tools).
 apt-get install -y subversion nodejs sqlite3 python-subversion python-sqlite
@@ -22,62 +22,43 @@ apt-get autoremove -y
 mkdir /home/svn /home/trac
 # Set /home/node to be our project root.
 ln -s /vagrant /home/server
-# Set a symlink to the common /usr/share folder.
+# Set a symlink to the common /usr/sshare folder.
 ln -s /usr/lib/python2.7/dist-packages/trac /usr/share/trac
 
-# Create a user for SVN
+# Somewhere for the PythonEggs to live!
+mkdir -p /tmp/pythoneggs
+chown www-data:www-data /tmp/pythoneggs
+chmod 777 /tmp/pythoneggs
+
+# Setup a SVN user and set the relevant permissions!
 adduser --system --shell /bin/sh --gecos 'SVN Project Managment' --group --disabled-password --home /home/svn subversion
 adduser www-data subversion
 adduser vagrant subversion
-# Create a user for Trac
+chown subversion:subversion /home/svn
+chmod -R g+rws /home/svn
+# Setup a Trac user and set the relevant permissions!
 adduser --system --shell /bin/sh --gecos 'Trac Project Managment' --group --disabled-password --home /home/trac trac
 adduser www-data trac
 adduser vagrant trac
+chown trac:trac /home/trac
+chmod 775 -R /home/trac
 
-# Fix permissions
-chown www-data:subversion /home/svn
-chown www-data:trac /home/trac
-chmod -R g+rws /home/svn
-chmod 0775 -R /home/trac
+# Start the SVN Server
+sudo -u subversion svnserve --daemon --root /home/svn
+# Set the SVN Server to start on boot!
+cp /vagrant/svn/init /etc/init.d/svnserve
+chmod +x /etc/init.d/svnserve
+update-rc.d svnserve defaults
 
-# sudo -u www-data svnserve --daemon --root /home/svn
-
+# Configure the Apache server
 service apache2 stop
-# a2enmod rewrite
-rm /etc/apache2/mods-enabled/dav_svn.conf
-ln -s /home/server/svn/dav_svn.conf /etc/apache2/mods-enabled/dav_svn.conf
 rm /etc/apache2/sites-enabled/*
 ln -s /home/server/apache.10.conf /etc/apache2/sites-enabled/10-Server.conf
 ln -s /home/server/apache.20.conf /etc/apache2/sites-enabled/20-SVN-Server.conf
 service apache2 restart
 
-NAME="KettleProject"
-URL=$(date +"%Y")"/$NAME"
-
-echo "Creating an example repository named $URL"
-
-SVNBASE="/home/svn/$URL"
-TRACBASE="/home/trac/$URL"
-
-# Create the Subversion Repository
-sudo -u subversion mkdir "$SVNBASE" -p
-sudo -u subversion svnadmin create "$SVNBASE"
-sudo -u subversion cp /home/server/svn/svnserve.conf "$SVNBASE/conf/svnserve.conf"
-sudo -u subversion cp /home/server/svn/passwd.ini "$SVNBASE/conf/passwd"
-echo "james = h3r0" >> "$SVNBASE/conf/passwd"
-chmod 0775 -R "$SVNBASE"
-
-# Create the Trac instance
-sudo -u trac mkdir "$TRACBASE" -p
-sudo -u trac trac-admin "$TRACBASE" initenv "$NAME" "sqlite:db/trac.db"
-sudo -u trac trac-admin "$TRACBASE" repository add "$NAME" "$SVNBASE"
-
-sudo -u trac trac-admin "$TRACBASE" permission add admin TRAC_ADMIN
-sudo -u trac trac-admin "$TRACBASE" permission add developer BROWSER_VIEW CHANGESET_VIEW FILE_VIEW LOG_VIEW MILESTONE_ADMIN REPORT_ADMIN SEARCH_VIEW TICKET_ADMIN TIMELINE_VIEW WIKI_ADMIN
-
-sudo -u trac trac-admin "$TRACBASE" permission add "james" developer
-
-sudo -u trac trac-admin "$TRACBASE" deploy "$TRACBASE/deploy"
-chmod 0775 -R "$TRACBASE"
-
-sudo service apache2 restart
+# And finally, create an example project.
+echo "Creating an example project at 2014/KettleProject"
+source /home/server/node/bin/kentprojects.sh
+CreateRepository "KettleProject"
+AddUserToRepository "2014/KettleProject" "james" "password"
