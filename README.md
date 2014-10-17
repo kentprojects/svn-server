@@ -30,7 +30,7 @@ Here is a list of endpoints & methods that this API supports.
 
 ```http
 GET / HTTP/1.1
-Host: svnadmin.kentprojects.com
+Host: code.kentprojects.com
 ```
 
 #### Response
