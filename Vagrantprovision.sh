@@ -60,6 +60,6 @@ service apache2 restart
 
 # And finally, create an example project.
 echo "Creating an example project at 2014/KettleProject"
-source /home/server/bin/kentprojects.sh
+source /home/server/bin/functions.sh
 CreateRepository "KettleProject"
 AddUserToRepository "2014/KettleProject" "james" "password"
