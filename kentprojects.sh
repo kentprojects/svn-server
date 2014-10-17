@@ -137,13 +137,21 @@ function DeleteRepository
 		return 1;
 	fi
 
-	SVNBASE="/home/svn/$1"
-	if [ -d "$SVNBASE" ]; then
-		sudo rm -r $SVNBASE
+	if [ -d "/home/svn/$1" ]; then
+		sudo rm -r "/home/svn/$1"
+		echo "SVN repository for $1 has been deleted."
 	fi
 
-	TRACBASE="/home/trac/$1"
-	if [ -d "$TRACBASE" ]; then
-		sudo rm -r $TRACBASE
+	if [ -d "/home/trac/$1" ]; then
+		sudo rm -r "/home/trac/$1"
+		echo "Trac instance for $1 has been deleted."
 	fi
 }
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+	case "$1" in
+		"CreateRepository") shift; CreateRepository $@ ;;
+		"AddUserToRepository") shift; AddUserToRepository $@ ;;
+		"DeleteRepository") shift; DeleteRepository $@ ;;
+	esac
+fi
