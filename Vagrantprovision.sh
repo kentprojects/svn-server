@@ -10,9 +10,9 @@ apt-get update
 aptitude install -y apache2 apache2.2-common apache2-mpm-prefork apache2-utils libexpat1 ssl-cert
 aptitude install -y libapache2-mod-wsgi libapache2-mod-perl2
 service apache2 restart
-# Install the second wave of packages (SVN, NodeJS, NPM, SQLite & various Python tools).
+# Install the next wave of packages (SVN, NodeJS, NPM, SQLite & various Python tools).
 apt-get install -y subversion nodejs npm sqlite3 python-subversion python-sqlite
-# Install the third wave of packages (Trac).
+# Install the final wave of packages (Trac).
 apt-get install -y trac trac-mastertickets trac-wysiwyg trac-wikitablemacro trac-tags trac-customfieldadmin trac-datefieldplugin
 # apt-get install -y trac-accountmanager trac-graphviz trac-icalviewplugin
 # Remove any unnecessary packages.
@@ -65,7 +65,7 @@ ln -s /home/server/apache.10.conf /etc/apache2/sites-enabled/10-Server.conf
 ln -s /home/server/apache.20.conf /etc/apache2/sites-enabled/20-SVN-Server.conf
 service apache2 restart
 
-# And finally, create an example project.
+# To assist in examples, let's quickly create a pretend project.
 echo "Creating an example project at 2014/KettleProject"
 kentprojects CreateRepository "KettleProject"
 kentprojects AddUserToRepository "2014/KettleProject" "james" "password"
