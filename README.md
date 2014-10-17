@@ -26,12 +26,19 @@ Here is a list of endpoints & methods that this API supports.
 
 ### Get a list of all repositories
 
+#### Request
+
 ```http
-GET /repos HTTP/1.1
+GET / HTTP/1.1
 Host: svnadmin.kentprojects.com
 ```
 
-A simple `GET` request to fetch a list of all the active repositories!
+#### Response
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+```
 
 ```json
 [
@@ -42,9 +49,11 @@ A simple `GET` request to fetch a list of all the active repositories!
 
 ### Create repositories
 
+#### Request
+
 ```http
-POST /repo HTTP/1.1
-Host: svnadmin.kentprojects.com
+POST / HTTP/1.1
+Host: code.kentprojects.com
 ```
 
 ```json
@@ -53,7 +62,20 @@ Host: svnadmin.kentprojects.com
 }
 ```
 
-A simple `POST` request to create a new repository!
+#### Response
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+```
+
+```json
+{
+	"name": "KettleProject",
+	"svn": "svn://code.kentprojects.com/2014/KettleProject",
+	"trac": "http://code.kentprojects.com/2014/KettleProject"
+}
+```
 
 If the project already exists (for this year) then you will get back:
 
@@ -70,7 +92,16 @@ Content-Type: application/json
 }
 ```
 
-If the project doesn't exist, it will be created and the new repository data will be returned to you:
+### Delete a repository
+
+#### Request
+
+```http
+POST /api/2014/KettleProject/delete HTTP/1.1
+Host: code.kentprojects.com
+```
+
+#### Response
 
 ```http
 HTTP/1.1 200 OK
@@ -78,53 +109,66 @@ Content-Type: application/json
 ```
 
 ```json
-{
-	"name": "KettleProject",
-	"repository": "code.kentprojects.com/2014/KettleProject"
-}
-```
-
-### Get repository data
-
-```http
-GET /repo/2014/KettleProject HTTP/1.1
-Host: svnadmin.kentprojects.com
-```
-
-Which will return you information about that project:
-
-```http
-HTTP/1.1 200 OK
-Content-Type: application/json
-```
-
-```json
-{
-	"name": "KettleProject",
-	"repository": "code.kentprojects.com/2014/KettleProject",
-	"users": [
-		"jsd24", "mh472", "mjw59"
-	],
-	"recent": [
-		{
-			"author": "Matt Weeks <mjw59@kent.ac.uk>",
-			"message": "Updates!"
-		},
-		{
-			"author": "James D <james@jdrydn.com>",
-			"message": "Initial commit"
-		}
-	]
-}
+"Repository 2014/KettleProject deleted."
 ```
 
 ### Add user to repository
 
-TBA.
+```http
+POST /api/:YEAR/:REPOSITORY/user HTTP/1.1
+Host: code.kentprojects.com
+```
+
+#### Request
+
+```http
+POST /api/2014/KettleProject/user HTTP/1.1
+Host: code.kentprojects.com
+```
+
+```json
+{
+  "jsd24": "somepassword1",
+  "mh472": "somepassword2",
+  "mjw43": "somepassword3"
+}
+```
+
+#### Response
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+```
+
+```json
+"Users jsd24,mh472,mjw43 added to 2014/KettleProject"
+```
 
 ### Remove user from repository
 
-TBA.
+```http
+POST /api/:YEAR/:REPOSITORY/delete/:USER HTTP/1.1
+Host: code.kentprojects.com
+```
+
+#### Request
+
+```http
+POST /api/2014/KettleProject/delete/mh472 HTTP/1.1
+Host: code.kentprojects.com
+```
+
+#### Response
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+```
+
+```json
+"User mh472 deleted from 2014/KettleProject"
+```
 
 ## Contact
 

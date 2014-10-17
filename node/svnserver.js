@@ -6,42 +6,35 @@
  */
 require("shelljs/global");
 
-var authentication = require("./authentication.json"),
-	cmdOptions = {"async": false, "silent": true},
+var crypto = require("crypto"),
 	express = require("express"),
 	http = require("http"),
-	list = {processed: [], svn: [], trac: []},
+	moment = require("moment");
 
-	app = express();
-
-app.configure(function() {
-	app.enable('trust proxy');
-});
-
-app.configure("development", function() {
-	app.disable('trust proxy');
-});
-
-app.configure(function() {
-	app.set("port", process.env.PORT || 4000);
-	app.use(express.logger("dev"));
-	app.use(express.favicon());
-	app.use(express.json());
-	app.use(express.urlencoded({limit: "10mb"}));
-	app.use(app.router);
-});
-
-app.configure("development", function() {
-	app.use(express.errorHandler());
-});
+var authentication = require("./authentication.json"),
+	config = {
+		port: 4000,
+		svn: {
+			directory: "/home/svn",
+			url: "svn://code.kentprojects.com/"
+		},
+		trac: {
+			directory: "/home/trac",
+			url: "http://code.kentprojects.com/"
+		}
+	},
+	repositories = {},
+	repositories_users = {};
 
 /**
+ * Used to authenticate the requests.
+ *
  * @param request
  * @param response
  * @param next
  * @return void
  */
-function authenticate(request, response, next)
+function Authenticate(request, response, next)
 {
 	if (!request.headers.token)
 	{
@@ -60,95 +53,268 @@ function authenticate(request, response, next)
 
 	response.json(400, "Invalid application token.");
 }
-
 /**
- * @param continuecallback
- * @return void
+ * The base look for a record.
  */
-function updateListOfRepositories(continuecallback)
+function BuildBasicRecord(name)
 {
-	var buildSVNlist = function(continuecallback) {
-		exec(
-			"find /home/svn/*/* -maxdepth 0 -type d | awk '{print substr($0, 11)}'",
-			{"async": true, "silent": true},
-			function(code, output) {
-				if (code > 0)
-				{
-					console.error(output);
-					exit(1);
-				}
-				list.svn = output.trim().split("\n");
-				list.svn.map(function(repository) {
-					var record = list.processed[repository] || {};
-					record.svn = true;
-					list.processed[repository] = record;
-				});
-				continuecallback && continuecallback();
-			}
-		);
+	return {
+		name: name,
+		svn: false,
+		trac: false
 	};
-	var buildTraclist = function(continuecallback) {
-		exec(
-			"find /home/trac/*/* -maxdepth 0 -type d | awk '{print substr($0, 12)}'",
-			{"async": true, "silent": true},
-			function(code, output) {
-				if (code > 0)
-				{
-					console.error(output);
-					exit(1);
-				}
-				list.trac = output.trim().split("\n");
-				var record = list.processed[repository] || {};
-				record.trac = true;
-				list.processed[repository] = record;
-				continuecallback && continuecallback();
+}
+/**
+ * Build the list from /home/svn.
+ */
+function BuildSVNlist(continuecallback)
+{
+	exec(
+		"find /home/svn/*/* -maxdepth 0 -type d | awk '{print substr($0, 11)}'",
+		{"async": true, "silent": true},
+		function(code, output) {
+			if (code > 0)
+			{
+				console.error(output);
+				exit(1);
 			}
-		);
-	};
-
-	buildSVNlist(function() {
-		buildTraclist(continuecallback);
+			output.trim().split("\n").map(function(repository) {
+				var record = repositories[repository] || BuildBasicRecord(repository);
+				record.svn = config.svn.url + record.name;
+				repositories[repository] = record;
+			});
+			continuecallback && continuecallback();
+		}
+	);
+}
+/**
+ * Build the list from /home/trac.
+ */
+function BuildTraclist(continuecallback)
+{
+	exec(
+		"find /home/trac/*/* -maxdepth 0 -type d | awk '{print substr($0, 12)}'",
+		{"async": true, "silent": true},
+		function(code, output) {
+			if (code > 0)
+			{
+				console.error(output);
+				exit(1);
+			}
+			output.trim().split("\n").map(function(repository) {
+				var record = repositories[repository] || BuildBasicRecord(repository);
+				record.trac = config.trac.url + record.name;
+				repositories[repository] = record;
+			});
+			continuecallback && continuecallback();
+		}
+	);
+}
+function GetRepositoryUsers(repository)
+{
+	if (!repositories_users[repository])
+	{
+		repositories_users[repository] = exec(
+			"cat /home/trac/"+repository+"/conf/passwd | cut -d ':' -f 1",
+			{"async": false, "silent": true}
+		).output.trim().split("\n");
+		repositories_users[repository].shift();
+	}
+	return repositories_users[repository];
+}
+/**
+ * Used to build a lovely list of repositories.
+ * If we have a pre-built up-to-date list, then we don't have to continuous check the folders
+ * on each request. Which is a nice plus.
+ */
+function UpdateListOfRepositories()
+{
+	BuildSVNlist(function() {
+		BuildTraclist(function() {
+			// console.log(list);
+		});
 	});
 }
 
+var app = express();
+
 /**
- * @return boolean
+ * If we're running this in production mode, then accept the proxy.
+ * Because the proxy will be our own!
  */
-function ifDirectoryExists(directory)
-{
-	return exec('[ -d "'+directory+'" ] && echo "true"', cmdOptions).output.trim() === "true";
-}
+app.configure(function() {
+	app.enable('trust proxy');
+});
+app.configure("development", function() {
+	app.disable('trust proxy');
+	config.svn.url = "svn://localhost:8080/";
+	config.trac.url = "http://localhost:8080/";
+});
 
+/**
+ * Configure the API
+ */
+app.configure(function() {
+	app.set("port", process.env.PORT || config.port);
+	app.use(express.logger("dev"));
+	app.use(express.favicon());
+	app.use(express.json());
+	app.use(Authenticate);
+	app.use(app.router);
+});
+app.configure("development", function() {
+	app.use(express.errorHandler());
+});
+
+/**
+ * Get a list of the repositories.
+ * GET /
+ */
 app.get("/", function(request, response) {
-	response.status(200);
-	response.json("Welcome to the SVN Server!");
+	response.json(200, repositories);
 });
-app.get("/repos", authenticate, function(request, response) {
-	if (list.processed.length === 0)
+/**
+ * Get a details of a specific repository.
+ * GET /repo/:year/:name
+ */
+app.get("/:year/:name", function(request, response) {
+	var url = request.params.year+"/"+request.params.name;
+	if (!repositories[url])
 	{
-		response.json(400, "No repositories.");
+		response.json(400, "There isn't a repository at "+url);
 		return;
 	}
-	response.json(200, list);
+	var repository = repositories[url];
+	repository.users = GetRepositoryUsers(url);
+	response.json(200, repository);
 });
-app.get("/repo/:year/:name", authenticate, function(request, response) {
-	var repository = request.params.year+"/"+request.params.name;
-
-	if (list.svn.indexOf(repository) < 0)
+/**
+ * Creating a new repository.
+ * POST /
+ */
+app.post("/", function(request, response) {
+	if (!request.body.name)
 	{
-		response.json(400, "Repository "+repository+" does not exist.");
+		response.json(400, "No name supplied to create a new repository.");
+		return;
+	}
+	var url = moment().format("YYYY")+"/"+request.body.name;
+	if (repositories[url])
+	{
+		response.json(400, "There is already a repository at "+repository.url);
+		return;
+	}
+	exec(
+		"kentprojects CreateRepository "+request.body.name,
+		{ async: true, silent: true },
+		function(code, output) {
+			if (code != 0)
+			{
+				response.json(500, "There was an error creating the repository at "+url);
+				return;
+			}
+			response.json(200, {
+				name: request.body.name,
+				svn: config.svn.url + url,
+				trac: config.trac.url + url
+			});
+			UpdateListOfRepositories();
+		}
+	);
+});
+/**
+ * Delete a repository.
+ * POST /:year/:name/delete
+ */
+app.post("/:year/:name/delete", function(request, response) {
+	var url = request.params.year+"/"+request.params.name;
+	if (!repositories[url])
+	{
+		response.json(400, "There isn't a repository at "+url);
+		return;
+	}
+	exec(
+		"kentprojects DeleteRepository "+url,
+		{ async: true, silent: true },
+		function(code, output) {
+			if (code != 0)
+			{
+				response.json(400, "There isn't a repository at "+url);
+				return;
+			}
+			response.json(200, "Repository "+url+" deleted.");
+			delete repositories[url];
+			delete repositories_users[url];
+		}
+	);
+});
+/**
+ * Add a user to the repository.
+ * POST /:year/:name/user
+ */
+app.post("/:year/:name/user", function(request, response) {
+	var url = request.params.year+"/"+request.params.name,
+		users = [];
+	if (!repositories[url])
+	{
+		response.json(400, "There isn't a repository at "+url);
+		return;
+	}
+	if (typeof request.body !== "object")
+	{
+		response.json(400, "Request body is not an object.");
 		return;
 	}
 
-	response.json(200, "Getting a specific repo named "+repository);
+	for(var user in request.body)
+	{
+		if (Object.prototype.hasOwnProperty.call(request.body, user))
+		{
+			users.push(user);
+			exec(
+				"kentprojects AddUserToRepository "+url+" "+user+" "+request.body[user],
+				{ async: false, silent: true },
+				function(code, output) {
+					if (code != 0)
+					{
+						response.json(500, "There was an error adding the user "+user+" to the repository at "+url);
+						return;
+					}
+				}
+			);
+		}
+	}
+
+	response.json(200, "Users "+users.join(",")+" added to "+url);
+	UpdateListOfRepositories();
 });
-app.post("/repo", authenticate, function(request, response) {
-	response.status(200);
-	response.json("Create a new repository.");
-	updateListOfRepositories();
+/**
+ * Deletes a user from the repository.
+ * POST /:year/:name/delete/:user
+ */
+app.post("/:year/:name/delete/:user", function(request, response) {
+	var url = request.params.year+"/"+request.params.name;
+	if (!repositories[url])
+	{
+		response.json(400, "There isn't a repository at "+url);
+		return;
+	}
+	exec(
+		"kentprojects RemoveUserFromRepository "+url+" "+request.params.user,
+		{ async: true, silent: true },
+		function(code, output) {
+			if (code != 0)
+			{
+				response.json(500, "There was an error adding a user to the repository at "+url);
+				return;
+			}
+			response.json(200, "User "+request.params.user+" deleted from "+url);
+			delete repositories_users[url];
+		}
+	);
 });
 
-updateListOfRepositories();
+UpdateListOfRepositories();
 
 http.createServer(app).listen(app.get("port"), function() {
 	console.log("SVN Server listening on port " + app.get("port"));
