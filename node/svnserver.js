@@ -4,8 +4,10 @@
  * @license: Copyright KentProjects
  * @link: http://www.kentprojects.com
  */
+require("shelljs/global");
+
 var authentication = require("./authentication.json"),
-	config = require("./config.json"),
+	cmdOptions = {"async": false, "silent": true},
 	express = require("express"),
 	http = require("http"),
 
@@ -20,7 +22,7 @@ app.configure("development", function() {
 });
 
 app.configure(function() {
-	app.set("port", process.env.PORT || config.port);
+	app.set("port", process.env.PORT || 4000);
 	app.use(express.logger("dev"));
 	app.use(express.favicon());
 	app.use(express.json());
@@ -57,6 +59,8 @@ app.get("/", function(request, response) {
 	response.json("Welcome to the SVN Server!");
 });
 app.get("/repos", authenticate, function(request, response) {
+	var repos = exec("find /home/svn/*/* -maxdepth 0 -type d | awk '{print substr($0, 11)}'", cmdOptions).output;
+	console.log(repos);
 	response.status(200);
 	response.json("Get a list of all the SVN repositories!");
 });
