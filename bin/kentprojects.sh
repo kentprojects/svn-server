@@ -36,13 +36,16 @@ function AddUserToRepository
 		return 2;
 	fi
 
-	echo "$2 = $3" >> sudo tee -a "$SVNBASE/conf/passwd"
+	cat << EOL | sudo tee -a "$SVNBASE/conf/passwd"
+$2 = $3
+EOL
 	sudo -u trac htpasswd -b "$TRACBASE/conf/passwd" "$2" "$3"
 	sudo -u trac trac-admin "$TRACBASE" permission add "$2" developer
 
 	sudo -u trac trac-admin "$TRACBASE" deploy "$TRACBASE/deploy"
 	sudo chmod 775 -R "$SVNBASE"
 	sudo chmod 775 -R "$TRACBASE"
+	sudo chmod 777 -R "$TRACBASE/db"
 }
 
 #
@@ -67,13 +70,21 @@ function CreateRepository
 	# Create the Subversion Repository
 	sudo -u subversion mkdir "$SVNBASE" -p
 	sudo -u subversion svnadmin create "$SVNBASE"
-	sudo -u subversion cp /home/server/svn/svnserve.conf "$SVNBASE/conf/svnserve.conf"
+
 	sudo -u subversion cp /home/server/svn/passwd.ini "$SVNBASE/conf/passwd"
+	cat << EOL | sudo tee "$SVNBASE/conf/svnserve.conf"
+[general]
+anon-access = none
+auth-access = write
+realm = $URL
+password-db = passwd
+EOL
 	sudo chmod 775 -R "$SVNBASE"
 
 	# Create the Trac instance
 	sudo -u trac mkdir "$TRACBASE" -p
 	sudo -u trac trac-admin "$TRACBASE" initenv "$NAME" "sqlite:db/trac.db"
+	sudo chmod 777 -R "$TRACBASE/db"
 	sudo -u trac cp /home/server/trac/passwd "$TRACBASE/conf/passwd"
 
 	# Trac permissions
@@ -107,6 +118,7 @@ EOL
 	# Trac deploy
 	sudo -u trac trac-admin "$TRACBASE" deploy "$TRACBASE/deploy"
 	sudo chmod 775 -R "$TRACBASE"
+	sudo chmod 777 -R "$TRACBASE/db"
 
 	sudo service apache2 restart
 	sudo svn import /home/server/svn/default "file://$SVNBASE" -m "Initial import of the structure."

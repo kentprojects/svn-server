@@ -38,6 +38,7 @@ chown subversion:subversion /home/svn
 chmod -R g+rws /home/svn
 # Setup a Trac user and set the relevant permissions!
 adduser --system --shell /bin/sh --gecos 'Trac Project Managment' --group --disabled-password --home /home/trac trac
+adduser subversion trac
 adduser www-data trac
 adduser vagrant trac
 chown trac:trac /home/trac
