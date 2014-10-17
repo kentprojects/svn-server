@@ -71,7 +71,7 @@ Content-Type: application/json
 
 ```json
 {
-	"name": "KettleProject",
+	"name": "2014/KettleProject",
 	"svn": "svn://code.kentprojects.com/2014/KettleProject",
 	"trac": "http://code.kentprojects.com/2014/KettleProject"
 }
