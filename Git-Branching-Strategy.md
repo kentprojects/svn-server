@@ -2,6 +2,18 @@
 
 ## Git Branching Strategy
 
+### Develop Branch
+
+- The main branch for all generic development to pushed into.
+
+```bash
+# Incorperate develop into master.
+$ git checkout master
+$ git merge --no-ff develop
+$ git push origin master
+$ git checkout develop
+```
+
 ### Feature Branches
 
 - May branch off from: `develop`
