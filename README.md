@@ -16,18 +16,9 @@ and requires repositories to be created and destroyed on demand.
 
 ## Installation
 
-Ensure you have all the relevant packages installed:
-
-```bash
-$ sudo apt-get install apache2 subversion nodejs mysql-server python-mysqldb python-subversion
-$ sudo apt-get install trac trac-accountmanager ?trac-graphviz trac-icalviewplugin trac-mastertickets trac-wysiwyg trac-wikitablemacro trac-tags trac-customfieldadmin trac-datefieldplugin
-```
-
-```bash
-$ sudo mkdir /home/node /home/svn /home/trac
-$ sudo chown www-data:www-data /home/node /home/svn /home/trac
-$ sudo -u www-data git clone https://github.com/kentprojects/svn-server /home/node
-```
+Check out the [Vagrant provisioning script](./Vagrantprovision.sh), which executes whenever we build a new Vagrant box from scratch.
+It contains all the packages and all the various permission changes and symlinks which are required when building a relatively complex system.
+Saying that, it's not relatively complex. It was to setup. But from this angle it seems relatively simple!
 
 ## Documentation
 
@@ -129,8 +120,12 @@ Content-Type: application/json
 
 ### Add user to repository
 
+TBA.
+
 ### Remove user from repository
+
+TBA.
 
 ## Contact
 
-<developer@kentprojects.com>
+For more information, contact any of us developers individually on [Github](/kentprojects) or collectively at <developer@kentprojects.com>.

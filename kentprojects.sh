@@ -88,6 +88,8 @@ EOL
 	sudo -u trac cp /home/server/trac/passwd "$TRACBASE/conf/passwd"
 
 	# Trac permissions
+	sudo -u trac trac-admin "$TRACBASE" permission remove anonymous "*"
+	sudo -u trac trac-admin "$TRACBASE" permission add anonymous WIKI_VIEW
 	sudo -u trac trac-admin "$TRACBASE" permission add admin BROWSER_VIEW CHANGESET_VIEW FILE_VIEW LOG_VIEW TRAC_ADMIN
 	sudo -u trac trac-admin "$TRACBASE" permission add developer BROWSER_VIEW CHANGESET_VIEW FILE_VIEW LOG_VIEW MILESTONE_ADMIN REPORT_ADMIN SEARCH_VIEW TICKET_ADMIN TIMELINE_VIEW WIKI_ADMIN
 

@@ -10,8 +10,8 @@ apt-get update
 aptitude install -y apache2 apache2.2-common apache2-mpm-prefork apache2-utils libexpat1 ssl-cert
 aptitude install -y libapache2-mod-wsgi libapache2-mod-perl2
 service apache2 restart
-# Install the second wave of packages (SVN, NodeJS, SQLite & various Python tools).
-apt-get install -y subversion nodejs sqlite3 python-subversion python-sqlite
+# Install the second wave of packages (SVN, NodeJS, NPM, SQLite & various Python tools).
+apt-get install -y subversion nodejs npm sqlite3 python-subversion python-sqlite
 # Install the third wave of packages (Trac).
 apt-get install -y trac trac-mastertickets trac-wysiwyg trac-wikitablemacro trac-tags trac-customfieldadmin trac-datefieldplugin
 # apt-get install -y trac-accountmanager trac-graphviz trac-icalviewplugin
@@ -19,11 +19,14 @@ apt-get install -y trac trac-mastertickets trac-wysiwyg trac-wikitablemacro trac
 apt-get autoremove -y
 
 # Directories required for the SVN server.
-mkdir /home/svn /home/trac
-# Set /home/node to be our project root.
+mkdir /home/svn /home/trac /home/node
+# Set /home/server to be our project root.
 ln -s /vagrant /home/server
 # Set a symlink to the common /usr/sshare folder.
 ln -s /usr/lib/python2.7/dist-packages/trac /usr/share/trac
+# Set a symlink to the executable.
+ln -s /home/server/kentprojects.sh /bin/kentprojects
+chmod +x /bin/kentprojects
 
 # Somewhere for the PythonEggs to live!
 mkdir -p /tmp/pythoneggs
@@ -43,6 +46,10 @@ adduser www-data trac
 adduser vagrant trac
 chown trac:trac /home/trac
 chmod 775 -R /home/trac
+# Get the NodeJS API ready for install.
+cp /home/server/node/* /home/node
+rm /home/node/svnserver.js && ln -s /home/server/node/svnserver.js /home/node/svnserver.js
+chown -R vagrant:vagrant /home/node
 
 # Start the SVN Server
 sudo -u subversion svnserve --daemon --root /home/svn
@@ -53,6 +60,7 @@ update-rc.d svnserve defaults
 
 # Configure the Apache server
 service apache2 stop
+a2enmod proxy_http
 rm /etc/apache2/sites-enabled/*
 ln -s /home/server/apache.10.conf /etc/apache2/sites-enabled/10-Server.conf
 ln -s /home/server/apache.20.conf /etc/apache2/sites-enabled/20-SVN-Server.conf
@@ -60,6 +68,5 @@ service apache2 restart
 
 # And finally, create an example project.
 echo "Creating an example project at 2014/KettleProject"
-source /home/server/kentprojects.sh
-CreateRepository "KettleProject"
-AddUserToRepository "2014/KettleProject" "james" "password"
+kentprojects CreateRepository "KettleProject"
+kentprojects AddUserToRepository "2014/KettleProject" "james" "password"
