@@ -48,7 +48,6 @@ chown trac:trac /home/trac
 chmod 775 -R /home/trac
 # Get the NodeJS API ready for install.
 cp /home/server/node/* /home/node
-rm /home/node/svnserver.js && ln -s /home/server/node/svnserver.js /home/node/svnserver.js
 chown -R vagrant:vagrant /home/node
 
 # Start the SVN Server
