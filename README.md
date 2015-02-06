@@ -26,6 +26,8 @@ Here is a list of endpoints & methods that this API supports.
 
 ### Get a list of all repositories
 
+This endpoint gets a list of all the repositories currently active on this SVN server.
+
 #### Request
 
 ```http
@@ -48,6 +50,8 @@ Content-Type: application/json
 ```
 
 ### Create repositories
+
+This endpoint is used to create a new repository & Trac instance.
 
 #### Request
 
@@ -94,6 +98,13 @@ Content-Type: application/json
 
 ### Delete a repository
 
+```http
+POST /api/:YEAR/:REPOSITORY/delete HTTP/1.1
+Host: code.kentprojects.com
+```
+
+This is used to delete a repository & it's associated Trac instance.
+
 #### Request
 
 ```http
@@ -118,6 +129,8 @@ Content-Type: application/json
 POST /api/:YEAR/:REPOSITORY/user HTTP/1.1
 Host: code.kentprojects.com
 ```
+
+This is used to add any number of users to the repository.
 
 #### Request
 
@@ -151,6 +164,10 @@ Content-Type: application/json
 POST /api/:YEAR/:REPOSITORY/delete/:USER HTTP/1.1
 Host: code.kentprojects.com
 ```
+
+This is used to delete a user from a repository.
+
+Unlike the **Add A User** endpoint earlier, this endpoint requires you delete users one at a time.
 
 #### Request
 
