@@ -99,7 +99,7 @@ Content-Type: application/json
 ### Delete a repository
 
 ```http
-POST /api/:YEAR/:REPOSITORY/delete HTTP/1.1
+POST /:YEAR/:REPOSITORY/delete HTTP/1.1
 Host: code.kentprojects.com
 ```
 
@@ -108,7 +108,7 @@ This is used to delete a repository & it's associated Trac instance.
 #### Request
 
 ```http
-POST /api/2014/KettleProject/delete HTTP/1.1
+POST /2014/KettleProject/delete HTTP/1.1
 Host: code.kentprojects.com
 ```
 
@@ -126,7 +126,7 @@ Content-Type: application/json
 ### Add user to repository
 
 ```http
-POST /api/:YEAR/:REPOSITORY/user HTTP/1.1
+POST /:YEAR/:REPOSITORY/user HTTP/1.1
 Host: code.kentprojects.com
 ```
 
@@ -135,7 +135,7 @@ This is used to add any number of users to the repository.
 #### Request
 
 ```http
-POST /api/2014/KettleProject/user HTTP/1.1
+POST /2014/KettleProject/user HTTP/1.1
 Host: code.kentprojects.com
 ```
 
@@ -161,7 +161,7 @@ Content-Type: application/json
 ### Remove user from repository
 
 ```http
-POST /api/:YEAR/:REPOSITORY/delete/:USER HTTP/1.1
+POST /:YEAR/:REPOSITORY/delete/:USER HTTP/1.1
 Host: code.kentprojects.com
 ```
 
@@ -172,7 +172,7 @@ Unlike the **Add A User** endpoint earlier, this endpoint requires you delete us
 #### Request
 
 ```http
-POST /api/2014/KettleProject/delete/mh472 HTTP/1.1
+POST /2014/KettleProject/delete/mh472 HTTP/1.1
 Host: code.kentprojects.com
 ```
 
